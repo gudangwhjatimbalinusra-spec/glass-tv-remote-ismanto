@@ -18,11 +18,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 3. Siapkan Java JDK 17
+      - name: 3. Siapkan Java JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: 4. Bungkus index.html menjadi Project Android Native
         run: |
@@ -30,7 +30,7 @@ jobs:
           if [ -f "index.html" ]; then
             cp index.html www/index.html
           else
-            echo "<h1>File index.html belum diupload ke GitHub</h1>" > www/index.html
+            echo "<h1>File index.html belum diupload</h1>" > www/index.html
           fi
           if [ -f "icon.png" ]; then cp icon.png www/icon.png; fi
 
@@ -51,7 +51,7 @@ jobs:
             npx capacitor-assets generate --android || true
           fi
 
-      - name: 6. Buka Blokir HTTP IP Lokal Xiaomi TV & Fix Gradle
+      - name: 6. Buka Blokir HTTP IP Lokal & Set Gradle 8.9
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' "$MANIFEST"
@@ -73,9 +73,9 @@ jobs:
           EOF
           npx cap sync android
 
-          # Memastikan Gradle Wrapper menggunakan versi yang stabil untuk JDK 17
+          # Mengatur Gradle ke versi 8.9 sesuai permintaan sistem
           cd android
-          ./gradlew wrapper --gradle-version 8.5
+          ./gradlew wrapper --gradle-version 8.9
           cd ..
 
       - name: 7. Compile & Build File APK
