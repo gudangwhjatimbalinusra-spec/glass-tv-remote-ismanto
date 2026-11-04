@@ -24,10 +24,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 4. Siapkan Android SDK & Tools
-        uses: android-actions/setup-android@v3
-
-      - name: 5. Bungkus index.html Menjadi Project Android
+      - name: 4. Bungkus index.html Menjadi Project Android
         run: |
           mkdir -p www
           if [ -f "index.html" ]; then
@@ -38,10 +35,21 @@ jobs:
           if [ -f "icon.png" ]; then cp icon.png www/icon.png; fi
 
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets
+          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 @capacitor/assets
 
           npx cap init "GlassTVRemote" "com.ismanto.glasstvremote" --web-dir www
           npx cap add android
+
+      - name: 5. Pasang Icon.png Otomatis ke APK
+        run: |
+          if [ -f "icon.png" ]; then
+            mkdir -p assets
+            cp icon.png assets/icon-only.png
+            cp icon.png assets/icon-foreground.png
+            cp icon.png assets/icon-background.png
+            cp icon.png assets/splash.png
+            npx capacitor-assets generate --android || true
+          fi
 
       - name: 6. Konfigurasi Cleartext & Atasi Lisensi Ganda
         run: |
