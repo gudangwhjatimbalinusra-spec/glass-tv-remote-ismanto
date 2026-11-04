@@ -18,11 +18,11 @@ jobs:
         with:
           node-version: '22'
 
-      - name: 3. Siapkan Java JDK 17
+      - name: 3. Siapkan Java JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: 4. Bungkus index.html menjadi Project Android Native
         run: |
@@ -35,7 +35,7 @@ jobs:
           if [ -f "icon.png" ]; then cp icon.png www/icon.png; fi
 
           npm init -y
-          npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest @capacitor/assets
+          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 @capacitor/assets
 
           npx cap init "GlassTVRemote" "com.ismanto.glasstvremote" --web-dir www
           npx cap add android
@@ -51,7 +51,7 @@ jobs:
             npx capacitor-assets generate --android || true
           fi
 
-      - name: 6. Konfigurasi Cleartext & Gradle Clean Wrapper
+      - name: 6. Konfigurasi Cleartext & Set Gradle 8.11.1
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' "$MANIFEST"
@@ -73,17 +73,25 @@ jobs:
           EOF
           npx cap sync android
 
-          # Merapikan dan membuat ulang Gradle Wrapper yang bersih
-          cd android
-          rm -rf gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.properties
-          gradle wrapper --gradle-version 8.5 --distribution-type bin
-          cd ..
+          # Mengunci distribusi Gradle ke versi 8.11.1 tanpa memanggil Gradle 9.8.2 bawaan Ubuntu
+          sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.11.1-bin.zip|g' android/gradle/wrapper/gradle-wrapper.properties
+
+          # Mencegah bentrok duplikat pustaka Kotlin saat kompilasi
+          cat << 'EOF' >> android/build.gradle
+
+          allprojects {
+              configurations.all {
+                  exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+                  exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+              }
+          }
+          EOF
 
       - name: 7. Compile & Build File APK
         working-directory: ./android
         run: |
           chmod +x gradlew
-          ./gradlew clean assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace
 
       - name: 8. Upload Hasil File APK Siap Download
         uses: actions/upload-artifact@v4
