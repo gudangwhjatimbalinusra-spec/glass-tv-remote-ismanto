@@ -13,10 +13,10 @@ jobs:
       - name: 1. Ambil File dari Repo
         uses: actions/checkout@v4
 
-      - name: 2. Siapkan Node.js 20
+      - name: 2. Siapkan Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 3. Siapkan Java JDK 17
         uses: actions/setup-java@v4
