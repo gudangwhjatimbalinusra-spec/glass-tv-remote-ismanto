@@ -18,11 +18,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 3. Siapkan Java JDK 21
+      - name: 3. Siapkan Java JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '17'
 
       - name: 4. Bungkus index.html menjadi Project Android Native
         run: |
@@ -35,7 +35,7 @@ jobs:
           if [ -f "icon.png" ]; then cp icon.png www/icon.png; fi
 
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets
+          npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest @capacitor/assets
 
           npx cap init "GlassTVRemote" "com.ismanto.glasstvremote" --web-dir www
           npx cap add android
@@ -51,7 +51,7 @@ jobs:
             npx capacitor-assets generate --android || true
           fi
 
-      - name: 6. Buka Blokir HTTP IP Lokal & Set Gradle 8.9
+      - name: 6. Konfigurasi Cleartext & Gradle Clean Wrapper
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' "$MANIFEST"
@@ -73,16 +73,17 @@ jobs:
           EOF
           npx cap sync android
 
-          # Mengatur Gradle ke versi 8.9 sesuai permintaan sistem
+          # Merapikan dan membuat ulang Gradle Wrapper yang bersih
           cd android
-          ./gradlew wrapper --gradle-version 8.9
+          rm -rf gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.properties
+          gradle wrapper --gradle-version 8.5 --distribution-type bin
           cd ..
 
       - name: 7. Compile & Build File APK
         working-directory: ./android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew clean assembleDebug --stacktrace
 
       - name: 8. Upload Hasil File APK Siap Download
         uses: actions/upload-artifact@v4
